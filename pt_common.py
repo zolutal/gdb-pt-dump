@@ -44,6 +44,40 @@ def make_canonical(va, top_bit_pos = 48):
     mask = ((((2**64)-1) >> shift) * bit) << shift
     return va | mask
 
+def addr_to_desc(va):
+    """
+    Returns the name of the virtual memory area a virtual address belongs to
+    Based on the PML4 mappings found here: https://elixir.bootlin.com/linux/latest/source/Documentation/x86/x86_64/mm.rst
+    """
+    if va <= 0x00007fffffffffff:
+        return "userspace"
+    elif va in range(0xffff880000000000, 0xffff887fffffffff):
+        return "LDT"
+    elif va in range(0xffff888000000000, 0xffffc87fffffffff):
+        return "physmap"
+    elif va in range(0xffffc90000000000, 0xffffe8ffffffffff):
+        return "vmalloc/ioremap"
+    elif va in range(0xffffea0000000000, 0xffffeaffffffffff):
+        return "vmmap"
+    elif va in range(0xffffec0000000000, 0xfffffbffffffffff):
+        return "KASAN shadow mem"
+    elif va in range(0xfffffe0000000000, 0xfffffe7fffffffff):
+        return "cpu_entry"
+    elif va in range(0xffffff0000000000, 0xffffff7fffffffff):
+        return "%esp fixup"
+    elif va in range(0xffffffef00000000, 0xfffffffeffffffff):
+        return "EFI region"
+    elif va in range(0xffffffff80000000, 0xffffffff9fffffff):
+        return "kernel text"
+    elif va in range(0xffffffffa0000000, 0xfffffffffeffffff):
+        return "kmod"
+    elif va in range(0xffffffffff000000, 0xffffffffff5fffff):
+        return "fixmap"
+    elif va in range(0xffffffffff600000, 0xffffffffff600fff):
+        return "vsyscall"
+    else: 
+        return "wtf"
+
 PagePrintSettings = namedtuple('PagePrintSettings', ['va_len', 'page_size_len'])
 
 class Page():
@@ -130,6 +164,9 @@ def page_to_str(page: Page, conf: PagePrintSettings):
         res = prefix + bcolors.RED + " " + s + bcolors.ENDC
     else:
         res = prefix + " " + s
+
+    # append area descriptions
+    res += f" | {addr_to_desc(page.va)}"
 
     return res
 

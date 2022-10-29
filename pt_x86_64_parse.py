@@ -147,7 +147,7 @@ class PT_x86_Common_Backend():
         conf = PagePrintSettings(va_len = max_va_len, page_size_len = max_page_size_len)
         fmt = f"  {{:>{max_va_len}}} : {{:>{max_page_size_len}}}"
         varying_str = fmt.format("Address", "Length")
-        print(bcolors.BLUE + varying_str + "   Permissions          " + bcolors.ENDC)
+        print(bcolors.BLUE + varying_str + "   Permissions          " + "   Section          " + bcolors.ENDC)
         for page in table:
             print(page_to_str(page, conf))
 
