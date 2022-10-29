@@ -110,7 +110,7 @@ class Page():
     def pwndbg_is_executable(self):
         return self.x
 
-def page_to_str(page: Page, conf: PagePrintSettings, arch: str = ""):
+def page_to_str(page: Page, conf: PagePrintSettings):
     prefix = ""
     if not page.s:
         prefix = bcolors.CYAN + " " + bcolors.ENDC

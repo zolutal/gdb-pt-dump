@@ -183,7 +183,7 @@ class PT_x86_Common_Backend():
         varying_str = fmt.format("Address", "Length")
         print(bcolors.BLUE + varying_str + "   Permissions          " + "   Section          " + bcolors.ENDC)
         for page in table:
-            page_str = page_to_str(page, conf, "x86_64")
+            page_str = page_to_str(page, conf)
             page_str += f" | {addr_to_desc(page.va)}" # append x86_64 PML4 vm area descriptions
             print(page_str)
 
