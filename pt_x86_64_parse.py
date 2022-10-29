@@ -149,7 +149,7 @@ class PT_x86_Common_Backend():
         varying_str = fmt.format("Address", "Length")
         print(bcolors.BLUE + varying_str + "   Permissions          " + "   Section          " + bcolors.ENDC)
         for page in table:
-            print(page_to_str(page, conf))
+            print(page_to_str(page, conf, "x86_64"))
 
     def print_stats(self):
         print(x86_msr.pt_cr0.check())

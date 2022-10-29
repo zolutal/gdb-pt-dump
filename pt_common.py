@@ -144,7 +144,7 @@ class Page():
     def pwndbg_is_executable(self):
         return self.x
 
-def page_to_str(page: Page, conf: PagePrintSettings):
+def page_to_str(page: Page, conf: PagePrintSettings, arch: str = ""):
     prefix = ""
     if not page.s:
         prefix = bcolors.CYAN + " " + bcolors.ENDC
@@ -165,8 +165,9 @@ def page_to_str(page: Page, conf: PagePrintSettings):
     else:
         res = prefix + " " + s
 
-    # append area descriptions
-    res += f" | {addr_to_desc(page.va)}"
+    # append x86_64 PML4 vm area descriptions
+    if arch in "x86_64":
+        res += f" | {addr_to_desc(page.va)}"
 
     return res
 
