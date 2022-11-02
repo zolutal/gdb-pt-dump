@@ -13,6 +13,24 @@ class bcolors:
     LGREY   = '\033[47m'
     ENDC    = '\033[0m'
 
+class fcolors:
+    black='\033[30m'
+    red='\033[31m'
+    green='\033[32m'
+    orange='\033[33m'
+    blue='\033[34m'
+    purple='\033[35m'
+    cyan='\033[36m'
+    lightgrey='\033[37m'
+    darkgrey='\033[90m'
+    lightred='\033[91m'
+    lightgreen='\033[92m'
+    yellow='\033[93m'
+    lightblue='\033[94m'
+    pink='\033[95m'
+    lightcyan='\033[96m'
+
+
 def extract(value, s, e):
     return extract_no_shift(value, s, e) >> s
 
@@ -123,11 +141,11 @@ def page_to_str(page: Page, conf: PagePrintSettings):
 
     res = ""
     if page.x and page.w:
-        res = prefix + bcolors.BLUE + " " + s + bcolors.ENDC
+        res = prefix + bcolors.BLUE + " " + fcolors.black + s + bcolors.ENDC
     elif page.w and not page.x:
-        res = prefix + bcolors.GREEN + " " + s + bcolors.ENDC
+        res = prefix + bcolors.GREEN + " " + fcolors.black + s + bcolors.ENDC
     elif page.x:
-        res = prefix + bcolors.RED + " " + s + bcolors.ENDC
+        res = prefix + bcolors.RED + " " + fcolors.black + s + bcolors.ENDC
     else:
         res = prefix + " " + s
 
@@ -156,7 +174,7 @@ def merge_cont_pages(pages, func_semantic_sim):
             merged_pages.append(cur_page)
             cur_page = copy.copy(page)
     merged_pages.append(cur_page)
-    return merged_pages 
+    return merged_pages
 
 def optimize(gig_pages, mb_pages, kb_pages, func_semantic_sim):
     pages = sorted(gig_pages + mb_pages + kb_pages, key = lambda p: p.va)
@@ -243,8 +261,8 @@ def find_aliases(virtual_page_ranges):
             for saved_range in phys_ranges:
                 if saved_range[0] > phys_range_end:
                     break
-                beg = max(phys_range, saved_range[0]) 
-                end = min(phys_range_end, saved_range[1]) 
+                beg = max(phys_range, saved_range[0])
+                end = min(phys_range_end, saved_range[1])
                 va = base_va + off + (beg - phys_range)
                 if beg < end and va != saved_range[2]:
                     key = (beg, end)

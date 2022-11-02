@@ -35,7 +35,7 @@ def addr_to_desc(va):
         return "fixmap"
     elif va in range(0xffffffffff600000, 0xffffffffff600fff):
         return "vsyscall"
-    else: 
+    else:
         return "wtf"
 
 def retrieve_pse_and_pae():
@@ -138,7 +138,7 @@ def parse_pt(phys_mem, pde, entry_size=8):
     return entries
 
 class PT_x86_Common_Backend():
- 
+
     def get_filter_is_writeable(self, has_superuser_filter, has_user_filter):
         return lambda p: p.w
 
@@ -181,7 +181,7 @@ class PT_x86_Common_Backend():
         conf = PagePrintSettings(va_len = max_va_len, page_size_len = max_page_size_len)
         fmt = f"  {{:>{max_va_len}}} : {{:>{max_page_size_len}}}"
         varying_str = fmt.format("Address", "Length")
-        print(bcolors.BLUE + varying_str + "   Permissions          " + "   Section          " + bcolors.ENDC)
+        print(bcolors.BLUE + fcolors.black + varying_str + "   Permissions          " + "   Section          " + bcolors.ENDC)
         for page in table:
             page_str = page_to_str(page, conf)
             page_str += f" | {addr_to_desc(page.va)}" # append x86_64 PML4 vm area descriptions
