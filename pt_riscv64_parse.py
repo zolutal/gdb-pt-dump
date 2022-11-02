@@ -99,7 +99,7 @@ def traverse_table(phys_mem, pt_addr, as_size):
 def print_stats():
     return
 
-def page_to_str(page, conf: PagePrintSettings):
+def page_to_str(page, conf: PagePrintSettings, arch: str = ""):
     prefix = ""
     if not page.s:
         prefix = bcolors.CYAN + " " + bcolors.ENDC

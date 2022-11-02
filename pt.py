@@ -79,7 +79,7 @@ class PageTableDump(gdb.Command):
         -s8 VALUE
             Searches for the value VALUE in the ranges after filtering
             VALUE should fit in 8 bytes.
-        -s4 VALUE 
+        -s4 VALUE
             Searches for the value VALUE in the ranges after filtering
             VALUE should fit in 4 bytes.
         -align ALIGNMENT [OFFSET]
@@ -268,7 +268,9 @@ class PageTableDump(gdb.Command):
                 aligned_offset = args.align[1] if args.align and len(args.align) == 2 else 0
                 search_results = search_memory(self.phys_mem, page_ranges_filtered, to_search, to_search_num, aligned_to, aligned_offset)
                 for entry in search_results:
-                    print("Found at " + hex(entry[0]) + " in " + str(entry[1]))
+                    conf = PagePrintSettings(va_len = 18, page_size_len = 8)
+                    arch = self.backend.get_arch()
+                    print("Found at " + hex(entry[0]) + " in " + page_to_str(entry[1], conf, arch))
             else:
                 print("Not found")
         elif args.kaslr:
@@ -281,7 +283,9 @@ class PageTableDump(gdb.Command):
                 if entries:
                     print(f"Search for {hex(x)}")
                     for entry in entries:
-                        print("Found at " + hex(entry[0] - off) + " in " + str(entry[1]))
+                        conf = PagePrintSettings(va_len = 18, page_size_len = 8)
+                        arch = self.backend.get_arch()
+                        print("Found at " + hex(entry[0] - off) + " in " + page_to_str(entry[1], conf, arch=arch))
             leaks = self.backend.print_kaslr_information(page_ranges, False)
             if leaks:
                 inner_find_leaks(leaks[0], 3)

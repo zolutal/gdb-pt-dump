@@ -14,22 +14,56 @@ class bcolors:
     ENDC    = '\033[0m'
 
 class fcolors:
-    black='\033[30m'
-    red='\033[31m'
-    green='\033[32m'
-    orange='\033[33m'
-    blue='\033[34m'
-    purple='\033[35m'
-    cyan='\033[36m'
-    lightgrey='\033[37m'
-    darkgrey='\033[90m'
-    lightred='\033[91m'
-    lightgreen='\033[92m'
-    yellow='\033[93m'
-    lightblue='\033[94m'
-    pink='\033[95m'
-    lightcyan='\033[96m'
+    BLACK       = '\033[30m'
+    RED         = '\033[31m'
+    GREEN       = '\033[32m'
+    ORANGE      = '\033[33m'
+    BLUE        = '\033[34m'
+    PURPLE      = '\033[35m'
+    CYAN        = '\033[36m'
+    LIGHTGREY   = '\033[37m'
+    DEFAULT     = '\033[39m'
+    DARKGREY    = '\033[90m'
+    LIGHTRED    = '\033[91m'
+    LIGHTGREEN  = '\033[92m'
+    YELLOW      = '\033[93m'
+    LIGHTBLUE   = '\033[94m'
+    PINK        = '\033[95m'
+    LIGHTCYAN   = '\033[96m'
 
+def addr_to_desc(va):
+    """
+    Returns the name of the virtual memory area a virtual address belongs to
+    Based on the PML4 mappings found here: https://elixir.bootlin.com/linux/latest/source/Documentation/x86/x86_64/mm.rst
+    """
+    if va <= 0x00007fffffffffff:
+        return "userspace"
+    elif va in range(0xffff880000000000, 0xffff887fffffffff):
+        return "LDT"
+    elif va in range(0xffff888000000000, 0xffffc87fffffffff):
+        return "physmap"
+    elif va in range(0xffffc90000000000, 0xffffe8ffffffffff):
+        return "vmalloc/ioremap"
+    elif va in range(0xffffea0000000000, 0xffffeaffffffffff):
+        return "vmmap"
+    elif va in range(0xffffec0000000000, 0xfffffbffffffffff):
+        return "KASAN shadow mem"
+    elif va in range(0xfffffe0000000000, 0xfffffe7fffffffff):
+        return "cpu_entry"
+    elif va in range(0xffffff0000000000, 0xffffff7fffffffff):
+        return "%esp fixup"
+    elif va in range(0xffffffef00000000, 0xfffffffeffffffff):
+        return "EFI region"
+    elif va in range(0xffffffff80000000, 0xffffffff9fffffff):
+        return "kernel text"
+    elif va in range(0xffffffffa0000000, 0xfffffffffeffffff):
+        return "kmod"
+    elif va in range(0xffffffffff000000, 0xffffffffff5fffff):
+        return "fixmap"
+    elif va in range(0xffffffffff600000, 0xffffffffff600fff):
+        return "vsyscall"
+    else:
+        return "wtf"
 
 def extract(value, s, e):
     return extract_no_shift(value, s, e) >> s
@@ -114,7 +148,7 @@ class Page():
 
     def __str__(self):
         conf = PagePrintSettings(va_len = 18, page_size_len = 8)
-        return page_to_str(self, conf)
+        return page_to_str(self, conf, "")
 
     def read_memory(self, phys_mem):
         memory = b""
@@ -128,26 +162,44 @@ class Page():
     def pwndbg_is_executable(self):
         return self.x
 
-def page_to_str(page: Page, conf: PagePrintSettings):
+def page_to_str(page: Page, conf: PagePrintSettings, arch: str = ""):
     prefix = ""
     if not page.s:
         prefix = bcolors.CYAN + " " + bcolors.ENDC
     elif page.s:
         prefix = bcolors.MAGENTA + " " + bcolors.ENDC
 
-    fmt = f"{{:>{conf.va_len}}} : {{:>{conf.page_size_len}}}"
-    varying_str = fmt.format(hex(page.va), hex(page.page_size))
-    s = f"{varying_str} | W:{int(page.w)} X:{int(page.x)} S:{int(page.s)} UC:{int(page.uc)} WB:{int(page.wb)}"
-
-    res = ""
+    bcolor = ""
+    fcolor = ""
+    endc = bcolors.ENDC
+    default = fcolors.DEFAULT
     if page.x and page.w:
-        res = prefix + bcolors.BLUE + " " + fcolors.black + s + bcolors.ENDC
+        bcolor = bcolors.BLUE
+        fcolor = fcolors.BLACK
     elif page.w and not page.x:
-        res = prefix + bcolors.GREEN + " " + fcolors.black + s + bcolors.ENDC
+        bcolor = bcolors.GREEN
+        fcolor = fcolors.BLACK
     elif page.x:
-        res = prefix + bcolors.RED + " " + fcolors.black + s + bcolors.ENDC
-    else:
-        res = prefix + " " + s
+        bcolor = bcolors.RED
+        fcolor = fcolors.BLACK
+
+    fmt = f"{{:>{conf.va_len}}} {default}:{fcolor} {{:>{conf.page_size_len}}}"
+    varying_str = fmt.format(hex(page.va), hex(page.page_size))
+    s = f"W:{int(page.w)} X:{int(page.x)} S:{int(page.s)} UC:{int(page.uc)} WB:{int(page.wb)}"
+
+    res = prefix + \
+            bcolor + fcolor +  \
+            " "  + varying_str + \
+            default + " | " + \
+            fcolor + s
+
+    # x86_64 PML4 vm area descriptions
+    if arch in "x86_64":
+        desc = addr_to_desc(page.va).ljust(17)
+        res += default + " | " + \
+            fcolor + desc
+
+    res += default + endc
 
     return res
 
