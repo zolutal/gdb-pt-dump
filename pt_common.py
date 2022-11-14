@@ -102,6 +102,7 @@ class Page():
     def __init__(self):
         self.va = None
         self.page_size = None
+        self.r = None
         self.w = None
         self.x = None
         self.s = None

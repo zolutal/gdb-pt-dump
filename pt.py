@@ -269,8 +269,7 @@ class PageTableDump(gdb.Command):
                 search_results = search_memory(self.phys_mem, page_ranges_filtered, to_search, to_search_num, aligned_to, aligned_offset)
                 for entry in search_results:
                     conf = PagePrintSettings(va_len = 18, page_size_len = 8)
-                    arch = self.backend.get_arch()
-                    print("Found at " + hex(entry[0]) + " in " + page_to_str(entry[1], conf, arch))
+                    print("Found at " + hex(entry[0]) + " in " + str(entry[1]))
             else:
                 print("Not found")
         elif args.kaslr:
@@ -284,8 +283,7 @@ class PageTableDump(gdb.Command):
                     print(f"Search for {hex(x)}")
                     for entry in entries:
                         conf = PagePrintSettings(va_len = 18, page_size_len = 8)
-                        arch = self.backend.get_arch()
-                        print("Found at " + hex(entry[0] - off) + " in " + page_to_str(entry[1], conf, arch=arch))
+                        print("Found at " + hex(entry[0] - off) + " in " + str(entry[1]))
             leaks = self.backend.print_kaslr_information(page_ranges, False)
             if leaks:
                 inner_find_leaks(leaks[0], 3)
