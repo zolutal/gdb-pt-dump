@@ -4,15 +4,29 @@ from pt_common import *
 from pt_constants import *
 from pt_arch_backend import PTArchBackend
 
+def read_reg(reg: str):
+    try:
+        return int(gdb.parse_and_eval(reg).cast(gdb.lookup_type("unsigned long")))
+    except:
+        regs: str | None = gdb.execute("monitor info registers", to_string=True)
+        if regs is None: raise Exception("monitor info registers failed")
+        reg = reg.upper().replace('$', '')
+        reg_start = regs.find(f'{reg}=')
+        reg_end = min([regs.find(' ', reg_start), regs.find('\r', reg_start)])
+        reg_val_str = regs[reg_start+len(reg)+1:reg_end]
+        print(reg, regs, reg_val_str)
+        return int('0x'+reg_val_str, 16)
+
+
 
 def retrieve_pse_and_pae():
-    uses_pae = ((int(gdb.parse_and_eval("$cr4").cast(gdb.lookup_type("unsigned long"))) >> 5) & 0x1) == 0x1
-    uses_pse = ((int(gdb.parse_and_eval("$cr4").cast(gdb.lookup_type("unsigned long"))) >> 4) & 0x1) == 0x1
+    uses_pae = ((read_reg('$cr4') >> 5) & 0x1) == 0x1
+    uses_pse = (((read_reg('$cr4')) >> 4) & 0x1) == 0x1
     return (uses_pse, uses_pae)
 
 
 def has_paging_enabled():
-    uses_paging = ((int(gdb.parse_and_eval("$cr0").cast(gdb.lookup_type("unsigned long"))) >> 31) & 0x1) == 0x1
+    uses_paging = ((((read_reg('$cr0'))) >> 31) & 0x1) == 0x1
     return uses_paging
 
 def parse_pml4(phys_mem, addr, force_traverse_all):
@@ -215,7 +229,7 @@ class PT_x86_64_Backend(PT_x86_Common_Backend, PTArchBackend):
         if args.cr3:
             pt_addr = int(args.cr3[0], 16)
         else:
-            pt_addr = int(gdb.parse_and_eval("$cr3").cast(gdb.lookup_type("unsigned long")))
+            pt_addr = read_reg('$cr3')
             # TODO: Check if these attribute bits in the cr3 need to be respected.
         pt_addr = pt_addr & (~0xfff)
 
@@ -279,7 +293,7 @@ class PT_x86_32_Backend(PT_x86_Common_Backend, PTArchBackend):
         if args.cr3:
             pt_addr = int(args.cr3[0], 16)
         else:
-            pt_addr = int(gdb.parse_and_eval("$cr3").cast(gdb.lookup_type("unsigned long")))
+            pt_addr = read_reg('$cr3')
             # TODO: Check if these attribute bits in the cr3 need to be respected.
             pt_addr = pt_addr & (~0xfff)
 
