@@ -14,7 +14,6 @@ def read_reg(reg: str):
         reg_start = regs.find(f'{reg}=')
         reg_end = min([regs.find(' ', reg_start), regs.find('\r', reg_start)])
         reg_val_str = regs[reg_start+len(reg)+1:reg_end]
-        print(reg, regs, reg_val_str)
         return int('0x'+reg_val_str, 16)
 
 
