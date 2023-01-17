@@ -108,6 +108,7 @@ class Page():
         self.s = None
         self.wb = None
         self.uc = None
+        self.glob = None
         self.phys = None
         self.sizes = None
 
@@ -186,7 +187,7 @@ def page_to_str(page: Page, conf: PagePrintSettings, arch: str = ""):
 
     fmt = f"{{:>{conf.va_len}}} {default}:{fcolor} {{:>{conf.page_size_len}}}"
     varying_str = fmt.format(hex(page.va), hex(page.page_size))
-    s = f"W:{int(page.w)} X:{int(page.x)} S:{int(page.s)} UC:{int(page.uc)} WB:{int(page.wb)}"
+    s = f"W:{int(page.w)} X:{int(page.x)} S:{int(page.s)} UC:{int(page.uc)} WB:{int(page.wb)} G:{int(page.glob)}"
 
     res = prefix + \
             bcolor + fcolor +  \

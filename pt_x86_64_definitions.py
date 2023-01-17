@@ -36,9 +36,9 @@ class PDP_Entry():
         self.accessed = is_accessed(value)
         self.virt_part = (index << 30) | parent_va
         self.large_page = is_large_page(value) # This means it's a leaf
+        self.glob = is_global(value)
         if self.large_page:
             self.dirty = is_dirty(value)
-            self.glob = True
             self.pd = extract_no_shift(value, 30, 51)
         else:
             self.pd = get_pdp_base(value)
@@ -68,9 +68,9 @@ class PD_Entry():
         self.accessed = is_accessed(value)
         self.virt_part = (index << pde_shift) | parent_va
         self.big_page = is_big_page(value) # This means it's a leaf
+        self.glob = is_global(value)
         if self.big_page:
             self.dirty = is_dirty(value)
-            self.glob = True
             self.pat = is_pat(value)
             # TODO
             self.pt = extract_no_shift(value, 20, 51)
@@ -102,7 +102,7 @@ class PT_Entry():
         self.cacheable = is_cacheable(value)
         self.accessed = is_accessed(value)
         self.dirty = is_dirty(value)
-        self.glob = True
+        self.glob = is_global(value)
         self.pat = is_pat(value)
         self.pt = extract_no_shift(value, 12, 51)
         self.virt = (index << 12) | parent_va
@@ -128,6 +128,7 @@ def create_page_from_pte(pte: PT_Entry) -> Page:
     page.page_size = 4096
     page.w = pte.writeable
     page.x = not pte.nx
+    page.glob = pte.glob
     page.s = pte.supervisor
     page.uc = not pte.cacheable
     page.wb = pte.writeback
@@ -141,6 +142,7 @@ def create_page_from_pde(pde: PD_Entry) -> Page:
     page.page_size = pde.page_size
     page.w = pde.writeable
     page.x = not pde.nx
+    page.glob = pde.glob
     page.s = pde.supervisor
     page.uc = not pde.cacheable
     page.wb = pde.writeback
@@ -155,6 +157,7 @@ def create_page_from_pdpe(pdpe: PDP_Entry) -> Page:
     page.w = pdpe.writeable
     page.x = not pdpe.nx
     page.s = pdpe.supervisor
+    page.glob = pdpe.glob
     page.uc = not pdpe.cacheable
     page.wb = pdpe.writeback
     page.phys = [pdpe.pd]
@@ -209,5 +212,5 @@ def is_pat(addr):
     return (addr >> 12) & 0x1
 
 def rwxs_semantically_similar(p1: Page, p2: Page) -> bool:
-    return p1.w == p2.w and p1.x == p2.x and p1.s == p2.s and p1.wb == p2.wb and p1.uc == p2.uc
+    return p1.w == p2.w and p1.x == p2.x and p1.s == p2.s and p1.wb == p2.wb and p1.uc == p2.uc and p1.glob == p2.glob
 
