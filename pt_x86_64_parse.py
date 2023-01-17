@@ -161,9 +161,13 @@ class PT_x86_Common_Backend():
         conf = PagePrintSettings(va_len = max_va_len, page_size_len = max_page_size_len)
         fmt = f"  {{:>{max_va_len}}} : {{:>{max_page_size_len}}}"
         varying_str = fmt.format("Address", "Length")
-        print(bcolors.BLUE + fcolors.BLACK + varying_str + "   Permissions          " + "   Section          " + bcolors.ENDC)
+        print(bcolors.BLUE + fcolors.BLACK + varying_str + "   Permissions          " + "       Section          " + bcolors.ENDC)
+
+        # do a lazy kaslr check
+        kaslr = self.print_kaslr_information(table, False) != (0xffffffff81000000, 0xffff888000000000)
+
         for page in table:
-            page_str = page_to_str(page, conf, "x86_64")
+            page_str = page_to_str(page, conf, "x86_64", kaslr)
             print(page_str)
 
     def print_stats(self):

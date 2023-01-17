@@ -31,39 +31,51 @@ class fcolors:
     PINK        = '\033[95m'
     LIGHTCYAN   = '\033[96m'
 
-def addr_to_desc(va):
+# Based on the PML4 mappings found here: https://elixir.bootlin.com/linux/latest/source/Documentation/x86/x86_64/mm.rst
+addr_desc_map_nokaslr = {
+        range(0, 0x00007fffffffffff): "userspace",
+        range(0xffff880000000000, 0xffff887fffffffff): "LDT",
+        range(0xffff888000000000, 0xffffc87fffffffff): "physmap",
+        range(0xffffc90000000000, 0xffffe8ffffffffff): "vmalloc",
+        range(0xffffea0000000000, 0xffffeaffffffffff): "vmmap",
+        range(0xffffec0000000000, 0xfffffbffffffffff): "KASAN",
+        range(0xfffffe0000000000, 0xfffffe7fffffffff): "cpu_entry",
+        range(0xffffff0000000000, 0xffffff7fffffffff): "fixup",
+        range(0xffffffef00000000, 0xfffffffeffffffff): "EFI",
+        range(0xffffffff80000000, 0xffffffff9fffffff): "kernel",
+        range(0xffffffffa0000000, 0xfffffffffeffffff): "kmod",
+        range(0xffffffffff000000, 0xffffffffff5fffff): "fixmap",
+        range(0xffffffffff600000, 0xffffffffff600fff): "vsyscall"
+    }
+
+# Based on reading kernel source
+addr_desc_map_kaslr = {
+        range(0, 0x00007fffffffffff): "userspace",
+        range(0xffff880000000000, 0xffff887fffffffff): "LDT",
+        range(0xffff888000000000, 0xffffc87fffffffff): "physmap",
+        range(0xffffc90000000000, 0xffffe8ffffffffff): "vmalloc",
+        range(0xffffea0000000000, 0xfffffbffffffffff): "vmmap",
+        range(0xfffffe0000000000, 0xfffffe7fffffffff): "cpu_entry",
+        range(0xffffff0000000000, 0xffffff7fffffffff): "fixup",
+        range(0xffffffef00000000, 0xfffffffeffffffff): "EFI",
+        range(0xffffffff80000000, 0xffffffffbfffffff): "kernel",
+        range(0xffffffffc0000000, 0xfffffffffeffffff): "kmod",
+        range(0xffffffffff000000, 0xffffffffff5fffff): "fixmap",
+        range(0xffffffffff600000, 0xffffffffff600fff): "vsyscall"
+    }
+
+def addr_to_desc(va, kaslr=False):
     """
     Returns the name of the virtual memory area a virtual address belongs to
-    Based on the PML4 mappings found here: https://elixir.bootlin.com/linux/latest/source/Documentation/x86/x86_64/mm.rst
+    :param va: the virtual address to get the description of
+    :param kaslr: whether or not kaslr is enabled
+    :return: string describing the virtual kernel area of `va`
     """
-    if va <= 0x00007fffffffffff:
-        return "userspace"
-    elif va in range(0xffff880000000000, 0xffff887fffffffff):
-        return "LDT"
-    elif va in range(0xffff888000000000, 0xffffc87fffffffff):
-        return "physmap"
-    elif va in range(0xffffc90000000000, 0xffffe8ffffffffff):
-        return "vmalloc/ioremap"
-    elif va in range(0xffffea0000000000, 0xffffeaffffffffff):
-        return "vmmap"
-    elif va in range(0xffffec0000000000, 0xfffffbffffffffff):
-        return "KASAN shadow mem"
-    elif va in range(0xfffffe0000000000, 0xfffffe7fffffffff):
-        return "cpu_entry"
-    elif va in range(0xffffff0000000000, 0xffffff7fffffffff):
-        return "%esp fixup"
-    elif va in range(0xffffffef00000000, 0xfffffffeffffffff):
-        return "EFI region"
-    elif va in range(0xffffffff80000000, 0xffffffff9fffffff):
-        return "kernel text"
-    elif va in range(0xffffffffa0000000, 0xfffffffffeffffff):
-        return "kmod"
-    elif va in range(0xffffffffff000000, 0xffffffffff5fffff):
-        return "fixmap"
-    elif va in range(0xffffffffff600000, 0xffffffffff600fff):
-        return "vsyscall"
-    else:
-        return "wtf"
+    addr_desc_map = addr_desc_map_kaslr if kaslr else addr_desc_map_nokaslr
+    for r, desc in addr_desc_map.items():
+        if va in r:
+            return desc
+    return "wtf"
 
 def extract(value, s, e):
     return extract_no_shift(value, s, e) >> s
@@ -164,7 +176,7 @@ class Page():
     def pwndbg_is_executable(self):
         return self.x
 
-def page_to_str(page: Page, conf: PagePrintSettings, arch: str = ""):
+def page_to_str(page: Page, conf: PagePrintSettings, arch: str = "", kaslr: bool = False):
     prefix = ""
     if not page.s:
         prefix = bcolors.CYAN + " " + bcolors.ENDC
@@ -197,7 +209,7 @@ def page_to_str(page: Page, conf: PagePrintSettings, arch: str = ""):
 
     # x86_64 PML4 vm area descriptions
     if arch in "x86_64":
-        desc = addr_to_desc(page.va).ljust(17)
+        desc = addr_to_desc(page.va, kaslr).ljust(17)
         res += default + " | " + \
             fcolor + desc
 
