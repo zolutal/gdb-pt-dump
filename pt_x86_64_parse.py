@@ -165,14 +165,14 @@ class PT_x86_Common_Backend():
         except:
             kaslr = True
             print("Detected that KASLR is enabled!")
-            print("Memory region names may be inaccurate!")
+            print("Region names may be inaccurate!")
 
         # Compute max len for these varying-len strings in order to print as tabular.
         max_va_len, max_page_size_len = compute_max_str_len(table)
         conf = PagePrintSettings(va_len = max_va_len, page_size_len = max_page_size_len)
         fmt = f"  {{:>{max_va_len}}} : {{:>{max_page_size_len}}}"
         varying_str = fmt.format("Address", "Length")
-        print(bcolors.BLUE + fcolors.BLACK + varying_str + "   Permissions          " + "       Section          " + bcolors.ENDC)
+        print(bcolors.BLUE + fcolors.BLACK + varying_str + "   Permissions          " + "       Region           " + bcolors.ENDC)
 
         for page in table:
             page_str = page_to_str(page, conf, "x86_64", True)
