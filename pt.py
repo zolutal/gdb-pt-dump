@@ -25,8 +25,21 @@ class VMPhysMem():
         if self.file:
             os.close(self.file)
 
-    def read(self, phys_addr, len):
-        res = gdb.execute(f"monitor gpa2hva {hex(phys_addr)}", to_string = True)
+    def read(self, phys_addr, length):
+        res = gdb.execute(f"monitor gpa2hva {hex(phys_addr)}", to_string=True)
+
+        if "is not RAM" in res:
+            try:
+                read_length = length
+                if length % 16 != 0:
+                    read_length = length + (16 - (length % 16))
+                res = gdb.execute(f"monitor x/{read_length//8}gx {hex(phys_addr)}", to_string=True)
+                data = b''.join([struct.pack("<Q", int(v.split()[1], 16)) + struct.pack("<Q", int(v.split()[2], 16)) for v in res.splitlines()])
+                return data[:length]
+            except Exception as e:
+                msg = f"FLAT MEMORY: Physical address ({hex(phys_addr)}, +{hex(length)}) is not accessible. Reason: {e}. gpa2hva result: {res}"
+                print(msg)
+                raise OSError(msg)
 
         # It's not possible to pread large sizes, so let's break the request
         # into a few smaller ones.
@@ -34,13 +47,14 @@ class VMPhysMem():
         try:
             hva = int(res.split(" ")[-1], 16)
             data = b""
-            for offset in range(0, len, max_block_size):
-                length_to_read = min(len - offset, max_block_size)
+            for offset in range(0, length, max_block_size):
+                length_to_read = min(length - offset, max_block_size)
                 block = os.pread(self.file, length_to_read, hva + offset)
                 data += block
             return data
         except Exception as e:
-            msg = f"Physical address ({hex(phys_addr)}, +{hex(len)}) is not accessible. Reason: {e}. gpa2hva result: {res}"
+            msg = f"Physical address ({hex(phys_addr)}, +{hex(length)}) is not accessible. Reason: {e}. gpa2hva result: {res}"
+            print(msg)
             raise OSError(msg)
 
 class PageTableDump(gdb.Command):
