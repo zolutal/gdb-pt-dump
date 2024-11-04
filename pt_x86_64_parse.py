@@ -156,6 +156,17 @@ class PT_x86_Common_Backend():
             return None
 
     def print_table(self, table):
+        # do a lazy kaslr check
+        th = gdb.selected_inferior()
+        kaslr = False
+        try:
+            kernel = th.read_memory(0xffffffff81000000, 1)
+            phys = th.read_memory(0xffff888000000000, 1)
+        except:
+            kaslr = True
+            print("Detected that KASLR is enabled!")
+            print("Memory region names may be inaccurate!")
+
         # Compute max len for these varying-len strings in order to print as tabular.
         max_va_len, max_page_size_len = compute_max_str_len(table)
         conf = PagePrintSettings(va_len = max_va_len, page_size_len = max_page_size_len)
@@ -163,11 +174,8 @@ class PT_x86_Common_Backend():
         varying_str = fmt.format("Address", "Length")
         print(bcolors.BLUE + fcolors.BLACK + varying_str + "   Permissions          " + "       Section          " + bcolors.ENDC)
 
-        # do a lazy kaslr check
-        kaslr = self.print_kaslr_information(table, False) != (0xffffffff81000000, 0xffff888000000000)
-
         for page in table:
-            page_str = page_to_str(page, conf, "x86_64", kaslr)
+            page_str = page_to_str(page, conf, "x86_64", True)
             print(page_str)
 
     def print_stats(self):

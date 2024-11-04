@@ -45,7 +45,7 @@ addr_desc_map_nokaslr = {
         range(0xffffffff80000000, 0xffffffff9fffffff): "kernel",
         range(0xffffffffa0000000, 0xfffffffffeffffff): "kmod",
         range(0xffffffffff000000, 0xffffffffff5fffff): "fixmap",
-        range(0xffffffffff600000, 0xffffffffff600fff): "vsyscall"
+        range(0xffffffffff600000, 0xffffffffff600fff): "vsyscall",
     }
 
 # Based on reading kernel source
@@ -61,7 +61,7 @@ addr_desc_map_kaslr = {
         range(0xffffffff80000000, 0xffffffffbfffffff): "kernel",
         range(0xffffffffc0000000, 0xfffffffffeffffff): "kmod",
         range(0xffffffffff000000, 0xffffffffff5fffff): "fixmap",
-        range(0xffffffffff600000, 0xffffffffff600fff): "vsyscall"
+        range(0xffffffffff600000, 0xffffffffff600fff): "vsyscall",
     }
 
 def addr_to_desc(va, kaslr=False):

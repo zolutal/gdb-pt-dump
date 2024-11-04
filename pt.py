@@ -296,7 +296,11 @@ class PageTableDump(gdb.Command):
         elif args.find_alias:
             find_aliases(page_ranges)
         else:
-            self.backend.print_table(page_ranges_filtered)
+
+            try:
+                self.backend.print_table(page_ranges_filtered)
+            except Exception as e:
+                print(e)
 
     def invoke(self, arg, from_tty):
         curr_proc = os.popen("pgrep qemu-system")
