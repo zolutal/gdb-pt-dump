@@ -1,6 +1,7 @@
 import gdb
 import sys
 import argparse
+import struct
 import os
 
 # A hack to import the other files without placing the files in the modules directory.
