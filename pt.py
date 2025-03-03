@@ -39,7 +39,7 @@ class VMPhysMem():
                 return data[:length]
             except Exception as e:
                 msg = f"FLAT MEMORY: Physical address ({hex(phys_addr)}, +{hex(length)}) is not accessible. Reason: {e}. gpa2hva result: {res}"
-                print(msg)
+                # print(msg)
                 raise OSError(msg)
 
         # It's not possible to pread large sizes, so let's break the request
@@ -55,7 +55,7 @@ class VMPhysMem():
             return data
         except Exception as e:
             msg = f"Physical address ({hex(phys_addr)}, +{hex(length)}) is not accessible. Reason: {e}. gpa2hva result: {res}"
-            print(msg)
+            # print(msg)
             raise OSError(msg)
 
 class PageTableDump(gdb.Command):
