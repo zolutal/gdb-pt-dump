@@ -147,16 +147,17 @@ class Page():
         i = len(self.phys) - 1
         off = 0
         while i >= 0:
-            if self.va < cut_addr:
+            if self.va + self.page_size - off - self.sizes[i] < cut_addr:
                 break
             off += self.sizes[i]
             i -= 1
-        if i > 0:
-            self.phys = self.phys[:i]
-            self.sizes = self.sizes[:i]
+        if i < len(self.phys) - 1:
+            self.phys = self.phys[:i + 1]
+            self.sizes = self.sizes[:i + 1]
         delta = 0
         if len(self.phys) >= 1:
-            delta = max(0, (self.va + self.page_size - off) - cut_addr)
+            end_of_last = self.va + self.page_size - off
+            delta = max(0, end_of_last - cut_addr)
             self.sizes[-1] = self.sizes[-1] - delta
         self.page_size = min(self.page_size, cut_addr - self.va)
 

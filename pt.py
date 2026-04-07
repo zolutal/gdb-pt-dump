@@ -367,13 +367,13 @@ class PageTableDump(gdb.Command):
         if args.after:
             filters.append(lambda page: args.after[0] < page.va + page.page_size)
             min_address = max(args.after[0], min_address)
-        else:
+        elif not args.range:
             min_address = None
 
         if args.before:
             filters.append(lambda page: args.before[0] > page.va)
             max_address = min(args.before[0], max_address)
-        else:
+        elif not args.range:
             max_address = None
 
         if args.filter:
